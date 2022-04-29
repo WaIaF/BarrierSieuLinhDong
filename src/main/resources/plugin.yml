@@ -1,0 +1,6 @@
+name: BarrierSieuLinhDong
+version: '${project.version}'
+main: me.waiaf.barriersieulinhdong.Main
+api-version: 1.16
+authors: [ WaIaF ]
+description: Barrier Sieu Linh Dong real free download
