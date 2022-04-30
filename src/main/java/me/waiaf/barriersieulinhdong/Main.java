@@ -1,7 +1,6 @@
 package me.waiaf.barriersieulinhdong;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -14,53 +13,64 @@ import java.util.HashMap;
 
 public final class Main extends JavaPlugin implements Listener {
 
-    HashMap<Player, Block> playerLastBlock = new HashMap<>();
+    public HashMap<Player, Block> playerLastBlock = new HashMap<>();
 
     @Override
     public void onEnable() {
         this.getServer().getPluginManager().registerEvents(this, this);
-
     }
 
     @EventHandler
-    public void onMoveEvent(PlayerMoveEvent event){
-
+    public void onNiggaMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
         if (player.isFlying()) return;
         Block block = player.getLocation().getBlock();
-        Location playerLocation = player.getLocation();
-        if (block.getType().equals(Material.WATER)) return;
-
-        playerLastBlock.put(player, block);
-
-        if (player.isSneaking()){
-
-            for (Player otherPlayers : Bukkit.getOnlinePlayers()) {
-                if (otherPlayers.getName().equals(player.getName())) return;
-                if (otherPlayers.getLocation().getY() - 1 == player.getLocation().getY()
-                        && otherPlayers.getNearbyEntities(0.2,1.25,0.2).contains(player)) return;
-
-                Bukkit.getScheduler().runTask(this, () -> {
-                    if (playerLastBlock.containsKey(player) && playerLastBlock.get(player) != null){
-                        otherPlayers.sendBlockChange(player.getLocation(), playerLastBlock.get(player).getType(), playerLastBlock.get(player).getData());
-                    }
-                    otherPlayers.sendBlockChange(player.getLocation(), Material.BARRIER, (byte) 0);
-                });
-
-
-            }
-
-        } else {
-            if (playerLastBlock.containsKey(player) && playerLastBlock.get(player) != null){
-                for (Player otherPlayers : Bukkit.getOnlinePlayers()){
-                    if (playerLastBlock.get(player) == null || otherPlayers.getName().equals(player.getName()))
-                        continue;
+        if (player.isSneaking() && !block.getType().equals(Material.WATER)) {
+            if (playerLastBlock.get(player) == null || !playerLastBlock.containsKey(player)) {
+                for (Player otherPlayers : Bukkit.getOnlinePlayers()) {
                     Bukkit.getScheduler().runTask(this, () -> {
-                        otherPlayers.sendBlockChange(playerLastBlock.get(player).getLocation(), block.getType(), block.getData());
-                        otherPlayers.sendBlockChange(player.getLocation(), playerLastBlock.get(player).getType(), playerLastBlock.get(player).getData());
+                        if (otherPlayers.getName().equals(player.getName())) return;
+                        if (otherPlayers.getNearbyEntities(0.1,1.25,0.1).contains(player) && otherPlayers.getLocation().getY() == player.getLocation().getY() - 1) {
+                            otherPlayers.sendBlockChange(player.getLocation(), Material.AIR, (byte) 0);
+                            return;
+                        }
+                        otherPlayers.sendBlockChange(player.getLocation(), Material.BARRIER, (byte) 0);
+                        playerLastBlock.put(player, block);
                     });
                 }
-            } else {
+
+            } else if (playerLastBlock.get(player) != null && playerLastBlock.containsKey(player)) {
+                for (Player otherPlayers : Bukkit.getOnlinePlayers()) {
+                    if (!otherPlayers.getName().equals(player.getName())) return;
+                    Block last = playerLastBlock.get(player);
+                    Bukkit.getScheduler().runTask(this, () -> {
+                        if (player.isFlying()) return;
+                        otherPlayers.sendBlockChange(last.getLocation(), last.getType(), last.getData());
+                        if (otherPlayers.getNearbyEntities(0.1,1.25,0.1).contains(player) && otherPlayers.getLocation().getY() == player.getLocation().getY() - 1) {
+                            otherPlayers.sendBlockChange(player.getLocation(), Material.AIR, (byte) 0);
+                            return;
+                        }
+                        otherPlayers.sendBlockChange(player.getLocation(), Material.BARRIER, (byte) 0);
+
+                        playerLastBlock.put(player, block);
+                    });
+                }
+            }
+
+        } else if (!player.isSneaking() && !block.getType().equals(Material.WATER)) {
+            if (playerLastBlock.get(player) != null && playerLastBlock.containsKey(player)) {
+                for (Player otherPlayers : Bukkit.getOnlinePlayers()) {
+                    if (playerLastBlock.get(player) == null || otherPlayers.getName().equals(player.getName()))
+                        continue;
+                    Block last = playerLastBlock.get(player);
+                    Bukkit.getScheduler().runTask(this, () -> {
+                        otherPlayers.sendBlockChange(last.getLocation(), block.getType(), block.getData());
+                        otherPlayers.sendBlockChange(player.getLocation(), last.getType(), last.getData());
+                        playerLastBlock.remove(player);
+                    });
+                }
+
+            } else if (playerLastBlock.get(player) == null || !playerLastBlock.containsKey(player)) {
                 for (Player otherPlayers : Bukkit.getOnlinePlayers()) {
                     if (otherPlayers.getName().equals(player.getName())) continue;
                     Bukkit.getScheduler().runTask(this, () -> otherPlayers.sendBlockChange(player.getLocation(), block.getType(), block.getData()));
@@ -68,5 +78,4 @@ public final class Main extends JavaPlugin implements Listener {
             }
         }
     }
-
 }
