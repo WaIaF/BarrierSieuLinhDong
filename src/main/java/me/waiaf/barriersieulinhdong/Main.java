@@ -37,13 +37,14 @@ public final class Main extends JavaPlugin implements Listener {
 
             for (Player otherPlayers : Bukkit.getOnlinePlayers()) {
                 if (otherPlayers.getName().equals(player.getName())) return;
-                if (otherPlayers.getLocation().getY() - 1 == player.getLocation().getY() && otherPlayers.getNearbyEntities(0.2,1.25,0.2).contains(player)) return;
+                if (otherPlayers.getLocation().getY() - 1 == player.getLocation().getY()
+                        && otherPlayers.getNearbyEntities(0.2,1.25,0.2).contains(player)) return;
 
                 Bukkit.getScheduler().runTask(this, () -> {
                     if (playerLastBlock.containsKey(player) && playerLastBlock.get(player) != null){
-                        otherPlayers.sendBlockChange(player.getLocation(), playerLastBlock.get(player).getType().createBlockData());
+                        otherPlayers.sendBlockChange(player.getLocation(), playerLastBlock.get(player).getType(), playerLastBlock.get(player).getData());
                     }
-                    otherPlayers.sendBlockChange(player.getLocation(), Material.BARRIER.createBlockData());
+                    otherPlayers.sendBlockChange(player.getLocation(), Material.BARRIER, (byte) 0);
                 });
 
 
@@ -55,14 +56,14 @@ public final class Main extends JavaPlugin implements Listener {
                     if (playerLastBlock.get(player) == null || otherPlayers.getName().equals(player.getName()))
                         continue;
                     Bukkit.getScheduler().runTask(this, () -> {
-                        otherPlayers.sendBlockChange(playerLastBlock.get(player).getLocation(), block.getType().createBlockData());
-                        otherPlayers.sendBlockChange(player.getLocation(), playerLastBlock.get(player).getType().createBlockData());
+                        otherPlayers.sendBlockChange(playerLastBlock.get(player).getLocation(), block.getType(), block.getData());
+                        otherPlayers.sendBlockChange(player.getLocation(), playerLastBlock.get(player).getType(), playerLastBlock.get(player).getData());
                     });
                 }
             } else {
                 for (Player otherPlayers : Bukkit.getOnlinePlayers()) {
                     if (otherPlayers.getName().equals(player.getName())) continue;
-                    Bukkit.getScheduler().runTask(this, () -> otherPlayers.sendBlockChange(player.getLocation(), block.getType().createBlockData()));
+                    Bukkit.getScheduler().runTask(this, () -> otherPlayers.sendBlockChange(player.getLocation(), block.getType(), block.getData()));
                 }
             }
         }
